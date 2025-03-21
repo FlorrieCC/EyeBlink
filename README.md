@@ -1,5 +1,7 @@
 # EyeBlink
 
+---
+
 ## MI0802 Thermal Imaging Module
 
 - **Name (CN)**: Long-wave Infrared (LWIR) Thermal Imaging Camera Module thermal array
@@ -15,7 +17,7 @@
 - **Frame Rate**: Up to 29.30 FPS
 - **Thermal Sensitivity (NETD)**: 125mK
 
----
+
 
 ## FLIR Lepton 3.5
 
@@ -33,7 +35,6 @@
 - **Price**: 1,337.99 HKD (Module included: 3,989 HKD)
 - **Data Reading**: [Data Reading Example](https://book.openmv.cc/example/27-Lepton/lepton-get-object-temp.html)
 
----
 
 ## Seek Thermal Micro Core M2
 
