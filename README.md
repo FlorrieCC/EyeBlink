@@ -1,7 +1,5 @@
 # EyeBlink
 
----
-
 ## MI0802 Thermal Imaging Module
 
 - **Name (CN)**: Long-wave Infrared (LWIR) Thermal Imaging Camera Module thermal array
