@@ -19,6 +19,8 @@
 
 ## FLIR Lepton 3.5
 
+### Details
+
 - **Name (CN)**: Miniature LWIR (Long-wave Infrared) Thermal Imaging Sensor thermal camera
 - **Model**: FLIR Lepton 3.5 ([Official Website](https://www.flir.asia/products/lepton/?model=500-0771-01&vertical=microcam&segment=oem))
 - **Operating Principle**: LWIR microbolometer array.
@@ -32,6 +34,10 @@
 - **Data Format**: User-selectable 14-bit, 8-bit (AGC applied), or 24-bit RGB (AGC and colorization applied)
 - **Price**: 1,337.99 HKD (Module included: 3,989 HKD)
 - **Data Reading**: [Data Reading Example](https://book.openmv.cc/example/27-Lepton/lepton-get-object-temp.html)
+
+### Experiment
+
+OpenmMV development board is also a usb device, put the [main file](https://github.com/FlorrieCC/EyeBlink/blob/main/FLIR_LEPTON/main.py), when the OpenMV device is connected to the computer through the usb interface, the device will run its own main script. We use a [controller](https://github.com/FlorrieCC/EyeBlink/blob/main/FLIR_LEPTON/controller.py) to listen to the script to run the device manually, and detach from the plugin provided by OpenMV as well as the IDE, use the command line to run mutiple devices at one time.
 
 
 ## Seek Thermal Micro Core M2
