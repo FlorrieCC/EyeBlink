@@ -11,6 +11,7 @@ from seekcamera import (
     SeekCameraFrameFormat,
     SeekFrame,
 )
+import os 
 
 # Overlay temperature information on the image
 def put_temp(image, temp1, temp2, sensor_name):
@@ -45,7 +46,7 @@ def on_frame(camera, camera_frame, renderer):
             return
 
         frame_data = frame.data
-        frame_data = np.flip(frame_data, 0)  # Vertical flip
+        # frame_data = np.flip(frame_data, 0)  # Vertical flip
         frame_data = np.flip(frame_data, 1)  # Horizontal flip
         frame_data = frame_data.astype(np.uint8)  # Convert to uint8 type
         frame_data = cv2.normalize(frame_data, None, 0, 255, cv2.NORM_MINMAX)  # Normalize
@@ -148,11 +149,15 @@ def main():
                 if key == ord("q"):  # Press 'q' to quit
                     break
                 elif key == ord("r"):  # Press 'r' to start/stop recording video and saving CSV file
+
+                    SAVE_DIR = "seek_data"  # 保存路径
+                    if not os.path.exists(SAVE_DIR):
+                        os.makedirs(SAVE_DIR)
                     if not renderer.recording:
                         # Start recording video and saving CSV file
                         renderer.recording = True
-                        video_name = "thermography_video.mp4"  # Change to MP4 format
-                        csv_name = "thermography_data.csv"
+                        video_name = os.path.join(SAVE_DIR, "thermography_video.mp4")  # 添加保存路径
+                        csv_name = os.path.join(SAVE_DIR, "thermography_data.csv")
                         fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # Change to MP4 encoder
                         renderer.video_writer = cv2.VideoWriter(video_name, fourcc, 10.0, (320, 240))
                         renderer.csv_file = open(csv_name, "w")
