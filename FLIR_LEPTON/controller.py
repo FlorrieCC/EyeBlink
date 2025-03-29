@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 
 # 修改为你对应的串口号
-PORT = '/dev/ttyACM1'
+PORT = '/dev/ttyACM0'
 BAUDRATE = 115200
 
 ser = serial.Serial(PORT, BAUDRATE, timeout=1)
