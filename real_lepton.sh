@@ -1,19 +1,35 @@
 #!/bin/bash
 
-# ./run_script.sh
-
-# 定义一个函数，用于终止后台运行的Python进程
 cleanup() {
-    echo "正在终止所有Python进程..."
-    pkill -f "/home/yvonne/Documents/EyeBlink/realsense/camera2mp4.py"
-    pkill -f "/home/yvonne/Documents/EyeBlink/FLIR_LEPTON/controller.py"
+    echo "发送SIGINT信号，正在终止Python进程..."
+    kill -SIGINT $PID1 $PID2
+
+    # 稍长一点时间给程序优雅退出
+    timeout=5
+    while [ $timeout -gt 0 ]; do
+        if ! ps -p $PID1 > /dev/null && ! ps -p $PID2 > /dev/null; then
+            break
+        fi
+        sleep 1
+        timeout=$((timeout-1))
+    done
+
+    # 如果5秒后仍未退出，强制终止
+    if ps -p $PID1 > /dev/null; then
+        echo "强制终止camera2mp4.py"
+        kill -SIGKILL $PID1
+    fi
+    if ps -p $PID2 > /dev/null; then
+        echo "强制终止controller.py"
+        kill -SIGKILL $PID2
+    fi
+
+    echo "所有Python进程已终止。"
     exit
 }
 
-# 捕获退出信号（如Ctrl+C），并调用cleanup函数
 trap cleanup SIGINT SIGTERM
 
-# 同时运行三个Python脚本
 python3 /home/yvonne/Documents/EyeBlink/realsense/camera2mp4.py &
 PID1=$!
 
@@ -22,7 +38,4 @@ PID2=$!
 
 echo "Python脚本已启动，进程ID分别为 $PID1 和 $PID2"
 
-# 等待所有后台进程完成
 wait
-
-echo "所有脚本执行完毕"
