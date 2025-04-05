@@ -7,9 +7,9 @@ def send_img(img):
     img_bytes = img.compress(quality=90)
     size = len(img_bytes)
 
-    usb.write(b'\xAA\x55')  # 帧头：两个字节标识图像开始
-    usb.write(size.to_bytes(4, 'big'))  # 图像长度
-    usb.write(img_bytes)  # 图像内容
+    usb.write(b'\xAA\x55')  # Frame header: two bytes indicating the start of an image
+    usb.write(size.to_bytes(4, 'big'))  # Image length
+    usb.write(img_bytes)  # Image content
 
 def collect_data():
 
@@ -21,17 +21,17 @@ def collect_data():
     sensor.set_color_palette(image.PALETTE_IRONBOW)
 
     sensor.set_pixformat(sensor.RGB565)
-    sensor.set_framesize(sensor.QQVGA)  # 分辨率为 160x120
+    sensor.set_framesize(sensor.QQVGA)  # Resolution: 160x120
     sensor.skip_frames(time=2000)
     clock = time.clock()
 
-    # 生成一个基于当前时间的主目录
+    # Generate a main folder name based on the current time
     start_timestamp = time.ticks_ms()
     start_time_str = "{:04d}{:02d}{:02d}{:02d}{:02d}{:02d}{:03d}".format(
         *time.localtime()[:6], start_timestamp % 1000
     )
 
-    # 创建三个目录（这里只保留 image_folder 是为了保留你的结构）
+    # Create three directories (only image_folder will be used to store images)
     main_folder = "LeptonData/0405_{}".format(start_time_str)
     image_folder = "{}/image".format(main_folder)  
     meta_folder = "{}/meta".format(main_folder)
@@ -44,19 +44,16 @@ def collect_data():
                 log_str = "Failed to create folder {}: {}".format(folder, e)
                 usb.write(b'\xAB\xCD')
                 usb.write(log_str.encode())
-
                 return
 
-    # ======= metadata.csv：用于记录每帧的位置、尺寸、偏移量等信息 =======
+    # ======= metadata.csv: records info like frame index, resolution, file name =======
     metadata_filename = "{}/metadata.csv".format(meta_folder)
     meta_file = open(metadata_filename, "w")
     meta_file.write("Frame,Width,Height,Filename\n")
 
-
-
     frame_count = 0
 
-    log_str = "开始采集数据..."
+    log_str = "Starting data collection..."
     usb.write(b'\xAB\xCD')
     usb.write(log_str.encode())
 
@@ -67,31 +64,30 @@ def collect_data():
         width, height = img.width(), img.height()
         raw_data = img.bytearray()
 
-        # ======= 如果想恢复“每帧保存成单独 bin 文件”，改回这里：=======
+        # ======= Save each frame as an individual .bin file (raw image data) =======
         frame_filename = "{}/frame_{:05d}.bin".format(meta_folder, frame_count)
         with open(frame_filename, "wb") as frame_file:
             frame_file.write(raw_data)
         meta_file.write("{},{},{},{}\n".format(frame_count, width, height, frame_filename))
 
-        
-        # ======= 保存图像（.jpg）=======
+        # ======= Save image as .jpg file =======
         current_timestamp = time.ticks_ms()
         current_time_str = "{:04d}{:02d}{:02d}{:02d}{:02d}{:02d}{:03d}".format(
             *time.localtime()[:6], current_timestamp % 1000
         )
         image_name = "{}/{}.jpg".format(image_folder, current_time_str)
         try:
-                img.save(image_name)
+            img.save(image_name)
         except OSError as e:
             print("Failed to save image:", e)
             continue
 
-        # 通过串口发送img
+        # Send image via serial port
         send_img(img)
 
         frame_count += 1
 
-        # 检查串口是否收到 stop 指令
+        # Check for 'stop' command via serial
         if usb.any():
             cmd = usb.readline().decode().strip()
             if cmd == 'stop':
@@ -102,16 +98,13 @@ def collect_data():
         usb.write(b'\xAB\xCD')
         usb.write(log_str.encode())
 
-
-
-
-# ======= 主循环：等待串口命令控制采集 =======
+# ======= Main loop: wait for serial command to start collection =======
 while True:
     if usb.any():
         cmd = usb.readline().decode().strip()
         if cmd == 'start':
             while usb.any():
-                usb.read(usb.any())  # 丢弃旧数据
+                usb.read(usb.any())  # Discard old data
 
             usb.write(b'\xAB\xCD')
             usb.write("Data collection started\n")

@@ -5,16 +5,15 @@ import re
 from datetime import datetime
 from tqdm import tqdm
 
-
-# 温度范围
+# Temperature range
 min_temp_in_celsius = 20.0
 max_temp_in_celsius = 37.0
 
-# 灰度值映射到温度
+# Map grayscale to temperature
 def map_g_to_temp(g):
     return ((g * (max_temp_in_celsius - min_temp_in_celsius)) / 255.0) + min_temp_in_celsius
 
-# 加载 metadata.csv
+# Load metadata.csv
 def load_metadata(metadata_path):
     metadata = []
     with open(metadata_path, "r") as f:
@@ -25,7 +24,7 @@ def load_metadata(metadata_path):
             metadata.append((int(frame_index), int(width), int(height), filename))
     return metadata
 
-# 获取 image 文件夹中的毫秒级时间戳
+# Extract millisecond-level timestamps from the image folder
 def get_sorted_timestamps(image_folder):
     timestamps = []
     for filename in os.listdir(image_folder):
@@ -39,19 +38,19 @@ def get_sorted_timestamps(image_folder):
     timestamps.sort()
     return [ts for _, ts in timestamps]
 
-# 解析 .bin 文件为二维温度矩阵
+# Parse .bin file into 2D temperature matrix
 def process_bin_file(file_path, width, height):
     with open(file_path, "rb") as f:
         raw_data = f.read()
 
     expected_len = width * height * 2
     if len(raw_data) != expected_len:
-        raise ValueError(f"数据长度错误：{file_path}，期望 {expected_len} 字节，实际 {len(raw_data)}")
+        raise ValueError(f"Incorrect data length: {file_path}, expected {expected_len} bytes, got {len(raw_data)}")
 
-    # 解码为 uint16 像素值
+    # Decode to uint16 pixel values
     pixel_values = struct.unpack(f"<{width * height}H", raw_data)
 
-    # 归一化到 0~255 灰度值
+    # Normalize to 0–255 grayscale
     min_val = min(pixel_values)
     max_val = max(pixel_values)
     norm_values = [
@@ -59,21 +58,21 @@ def process_bin_file(file_path, width, height):
         for val in pixel_values
     ]
 
-    # 映射到温度并转为二维矩阵
+    # Map to temperature and reshape into 2D matrix
     temp_values = [round(map_g_to_temp(g), 2) for g in norm_values]
     matrix_2d = [temp_values[y * width : (y + 1) * width] for y in range(height)]
     return matrix_2d
 
-# 主程序
+# Main function
 def main(data_folder):
     metadata_file = os.path.join(data_folder, "metadata.csv")
     image_folder = os.path.join(os.path.dirname(data_folder), "image")
 
     if not os.path.exists(metadata_file):
-        print("❌ 找不到 metadata.csv")
+        print("❌ metadata.csv not found")
         return
     if not os.path.isdir(image_folder):
-        print("❌ 找不到 image 文件夹")
+        print("❌ image folder not found")
         return
 
     metadata = load_metadata(metadata_file)
@@ -83,25 +82,25 @@ def main(data_folder):
 
     pbar = tqdm(
         metadata,
-        desc="🚀 处理进度",
+        desc="🚀 Processing",
         ncols=90,
         bar_format="🔄 {desc} |{bar}| ✅ {percentage:3.0f}% ⏱️ {elapsed} ⏳{remaining} ⚡{rate_fmt} 📦 {n_fmt}/{total_fmt}"
     )
 
     for i, (frame_index, width, height, bin_filename) in enumerate(pbar):
         if i >= len(timestamps):
-            tqdm.write(f"⚠️ 跳过帧 {frame_index}，没有对应时间戳")
+            tqdm.write(f"⚠️ Skipping frame {frame_index}, no matching timestamp")
             continue
 
         bin_path = os.path.join(data_folder, bin_filename)
         if not os.path.exists(bin_path):
-            tqdm.write(f"⚠️ 未找到 bin 文件: {bin_path}")
+            tqdm.write(f"⚠️ Binary file not found: {bin_path}")
             continue
 
         try:
             matrix_2d = process_bin_file(bin_path, width, height)
         except Exception as e:
-            tqdm.write(f"❌ 错误帧 {frame_index}: {e}")
+            tqdm.write(f"❌ Error in frame {frame_index}: {e}")
             continue
 
         frame_json = {
@@ -114,21 +113,18 @@ def main(data_folder):
         all_frames.append(frame_json)
         pbar.set_postfix_str(f"Frame {frame_index}")
 
-
-
-
-    # 写入 JSON 文件，确保 matrix 是一行，并且整体 JSON 合法
+    # Save to JSON, flatten matrix into one line and ensure valid structure
     output_path = os.path.join(data_folder, "all_frames.json")
     with open(output_path, "w", encoding="utf-8") as f:
         f.write("[\n")
         for i, frame in enumerate(all_frames):
-            # 转为字符串
             json_str = json.dumps(frame, ensure_ascii=False, separators=(",", ":"))
-
-            # 把 matrix 中的换行和空格移除 —— 只对 "matrix":[[...],[...],...] 部分
-            json_str = re.sub(r'"matrix":\s*\[(.*?)\]', lambda m: '"matrix":[' + re.sub(r'\s+', '', m.group(1)) + ']', json_str, flags=re.DOTALL)
-
-            # 写入
+            json_str = re.sub(
+                r'"matrix":\s*\[(.*?)\]',
+                lambda m: '"matrix":[' + re.sub(r'\s+', '', m.group(1)) + ']',
+                json_str,
+                flags=re.DOTALL
+            )
             f.write("  " + json_str)
             if i < len(all_frames) - 1:
                 f.write(",\n")
@@ -136,9 +132,9 @@ def main(data_folder):
                 f.write("\n")
         f.write("]")
 
-    print(f"\n🎉 所有数据已保存到：{output_path}")
+    print(f"\n🎉 All data saved to: {output_path}")
 
-# 启动入口
+# Entry point
 if __name__ == "__main__":
-    folder = input("请输入包含二进制数据和 metadata.csv 的文件夹路径：").strip().strip("'")
+    folder = input("Enter the folder path containing binary data and metadata.csv: ").strip().strip("'")
     main(folder)

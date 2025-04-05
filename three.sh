@@ -2,19 +2,19 @@
 
 # ./run_script.sh
 
-# 定义一个函数，用于终止后台运行的Python进程
+# Define a function to terminate background Python processes
 cleanup() {
-    echo "正在终止所有Python进程..."
+    echo "Terminating all Python processes..."
     pkill -f "/home/yvonne/Documents/EyeBlink/realsense/camera2mp4.py"
     pkill -f "/home/yvonne/Documents/EyeBlink/seek/reading.py"
     pkill -f "/home/yvonne/Documents/EyeBlink/FLIR_LEPTON/controller.py"
     exit
 }
 
-# 捕获退出信号（如Ctrl+C），并调用cleanup函数
+# Catch exit signals (e.g., Ctrl+C) and call the cleanup function
 trap cleanup SIGINT SIGTERM
 
-# 同时运行三个Python脚本
+# Run three Python scripts simultaneously
 python3 /home/yvonne/Documents/EyeBlink/realsense/camera2mp4.py &
 PID1=$!
 
@@ -24,9 +24,9 @@ PID2=$!
 python3 /home/yvonne/Documents/EyeBlink/FLIR_LEPTON/controller.py &
 PID3=$!
 
-echo "Python脚本已启动，进程ID分别为 $PID1、$PID2 和 $PID3"
+echo "Python scripts started with process IDs: $PID1, $PID2, and $PID3"
 
-# 等待所有后台进程完成
+# Wait for all background processes to complete
 wait
 
-echo "所有脚本执行完毕"
+echo "All scripts have finished execution"

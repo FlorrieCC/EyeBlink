@@ -110,73 +110,56 @@ def main():
             def __init__(self, data_format="THERMOGRAPHY_FLOAT"):
                 self.data_format = data_format
                 self.frame_processed = False
-                self.frame_buffer = ImageBuffer(buffer_size=5)  # Buffer size is 5
+                self.frame_buffer = ImageBuffer(buffer_size=5)
                 self.frame_buffer_lock = Lock()
                 self.recording = False
                 self.video_writer = None
                 self.csv_file = None
 
-        # Select data format
-        # "THERMOGRAPHY_FLOAT" or "COLOR_ARGB8888"
         data_format = "THERMOGRAPHY_FLOAT"
-
         renderer = Renderer(data_format=data_format)
 
         # Register event callback
         manager.register_event_callback(on_event, renderer)
 
-        # Print instructions
-        print("Waiting for camera connection...")
-        print("\nUser controls:")
-        print("r:    Start/stop recording video and saving CSV file")
-        print("q:    Quit the program")
+        # 自动创建保存目录并开始录制
+        SAVE_DIR = "seek_data"
+        if not os.path.exists(SAVE_DIR):
+            os.makedirs(SAVE_DIR)
 
-        # Keep the program running, waiting for camera connection and processing frame data
+        renderer.recording = True
+        video_name = os.path.join(SAVE_DIR, "thermography_video.mp4")
+        csv_name = os.path.join(SAVE_DIR, "thermography_data.csv")
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        renderer.video_writer = cv2.VideoWriter(video_name, fourcc, 10.0, (320, 240))
+        renderer.csv_file = open(csv_name, "w")
+        print(f"Started recording video and saving CSV file: {video_name} and {csv_name}")
+
+        print("Recording... Press Ctrl+C to stop.")
+
         try:
             while True:
-                # Check if there is a new frame
                 if renderer.frame_processed:
                     renderer.frame_processed = False
 
-                # Get the latest frame data from the buffer and display it
                 with renderer.frame_buffer_lock:
                     frame_data = renderer.frame_buffer.get()
                     if frame_data is not None:
                         cv2.imshow("Seek Thermal Camera", frame_data)
 
-                # Detect key input
-                key = cv2.waitKey(1)
-                if key == ord("q"):  # Press 'q' to quit
-                    break
-                elif key == ord("r"):  # Press 'r' to start/stop recording video and saving CSV file
-
-                    SAVE_DIR = "seek_data"  # 保存路径
-                    if not os.path.exists(SAVE_DIR):
-                        os.makedirs(SAVE_DIR)
-                    if not renderer.recording:
-                        # Start recording video and saving CSV file
-                        renderer.recording = True
-                        video_name = os.path.join(SAVE_DIR, "thermography_video.mp4")  # 添加保存路径
-                        csv_name = os.path.join(SAVE_DIR, "thermography_data.csv")
-                        fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # Change to MP4 encoder
-                        renderer.video_writer = cv2.VideoWriter(video_name, fourcc, 10.0, (320, 240))
-                        renderer.csv_file = open(csv_name, "w")
-                        print(f"Started recording video and saving CSV file: {video_name} and {csv_name}")
-                    else:
-                        # Stop recording video and saving CSV file
-                        renderer.recording = False
-                        renderer.video_writer.release()
-                        renderer.csv_file.close()
-                        print("Video recording and CSV file saving completed!")
-
-                # Sleep briefly to avoid excessive CPU usage
+                cv2.waitKey(1)
                 time.sleep(0.1)
 
         except KeyboardInterrupt:
-            print("Program exited")
+            print("Stopping recording...")
 
-        # Close OpenCV windows
+        renderer.recording = False
+        renderer.video_writer.release()
+        renderer.csv_file.close()
+        print("Recording and saving completed!")
+
         cv2.destroyAllWindows()
+
 
 if __name__ == "__main__":
     main()
