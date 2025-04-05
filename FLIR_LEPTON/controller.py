@@ -2,6 +2,29 @@ import serial
 import time
 import cv2
 import numpy as np
+import signal
+
+running = True
+
+def signal_handler(sig, frame):
+    global running
+    print("Received SIGINT, cleaning up...")
+
+    send_command("stop")
+    running = False  # 告诉主循环退出
+
+    # 等待尾部日志
+    timeout = 2
+    start = time.time()
+    while time.time() - start < timeout:
+        try:
+            read_frame_and_log()
+        except TimeoutError:
+            continue
+
+
+# 注册SIGINT信号处理函数
+signal.signal(signal.SIGINT, signal_handler)
 
 # 修改为你对应的串口号
 PORT = '/dev/ttyACM0'
@@ -65,22 +88,15 @@ if __name__ == "__main__":
     send_command("start")
     print("开发板已启动，正在采集数据...")
     try:
-        while True:
+        while running:
             read_frame_and_log()
-    except KeyboardInterrupt:
-        send_command("stop")
-
-        # 等待一段时间接收“尾部日志”
-        timeout = 2  
-        start = time.time()
-        while time.time() - start < timeout:
-            try:
-                read_frame_and_log()
-            except TimeoutError:
-                # 超时跳出，不需要频繁报错
-                continue
-
+    except Exception as e:
+        print(f"发生异常: {e}")
+    finally:
         ser.close()
         cv2.destroyAllWindows()
         print("串口连接已关闭。")
+
+
+
 
