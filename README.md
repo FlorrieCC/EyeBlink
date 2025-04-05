@@ -1,22 +1,3 @@
-# EyeBlink
-
-## MI0802 Thermal Imaging Module
-
-- **Name (CN)**: Long-wave Infrared (LWIR) Thermal Imaging Camera Module thermal array
-- **Model**: MI0802 + MI48x4
-- **Operating Principle**: Uses Microbolometer or Thermopile technology.
-- **Video Stream Support**: Supported, suitable for real-time thermal imaging analysis.
-- **Temperature Range**: -20°C to 400°C
-- **Resolution**: 80×62
-- **Field of View (FOV)**:
-  - **MI0802M5S**: 45°(H) / 34°(V) / 56°(D)
-  - **MI0802M6S**: 90°(H) / 67°(V) / 122°(D)
-  - **MI0802M7G**: 105°(H) / 79°(V) / 134°(D)
-- **Frame Rate**: Up to 29.30 FPS
-- **Thermal Sensitivity (NETD)**: 125mK
-
-
-
 ## FLIR Lepton 3.5
 
 ### Details
@@ -54,3 +35,6 @@ OpenmMV development board is also a usb device, put the [main file](https://gith
 - **Data Format**: 16-bit RAW data, 32-bit ARGB processed data, supports floating-point or fixed-point thermal imaging temperature units (°C, °F, K)
 - **Price**: 5,088.86 HKD
 - **Data Reading**: [seekcamera-python SDK](https://github.com/seekcamera/seekcamera-python)
+
+
+### The complete readme: https://possible-calf-de9.notion.site/Thermal-Duo-One-Truth-Building-a-Reliable-Deployment-for-Comparative-Thermal-Sensing-1c7208d1fa5780f2997dd9ca39009ebf?pvs=4
